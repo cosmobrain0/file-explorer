@@ -27,6 +27,7 @@ This project has multiple purposes, listed below in no particular order:
 - [ ] be able to select files to zip
 - [ ] be able to extract files
 - [ ] be able to run shell commands without exiting the program
+
 As shown by the empty check boxes, none of these features have been implemented yet.
 
 ## Feature Requests
@@ -39,3 +40,10 @@ If you would like to contribute, feel free to do that! If you want me to merge i
 then you can make a request and if your code is clear enough that I can understand it and
 it's been tested then I'll merge it. If you would like to discuss this project then
 you can DM me on Discord: `cosmobrain`
+
+## TODO
+this section is more of a note-to-self kinda thing
+- Make a OutputMessage `Window` which can output a list of messages
+- Make a DirectoryView `Window`
+- Make it update itself properly and allow for navigating the file system
+- Have proper error handling, with error messages being reported to OutputMessage

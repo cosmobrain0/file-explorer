@@ -1,4 +1,4 @@
-# File Explorer
+# File Explorer > Prototype 1
 > A file explorer written in Rust for the command line
 
 This project uses `crossterm`, so it should run on everything (I think), but I only intend
@@ -41,9 +41,7 @@ then you can make a request and if your code is clear enough that I can understa
 it's been tested then I'll merge it. If you would like to discuss this project then
 you can DM me on Discord: `cosmobrain`
 
-## TODO
+## TODO > Prototype 1
 this section is more of a note-to-self kinda thing
-- Make a OutputMessage `Window` which can output a list of messages
 - Make a DirectoryView `Window`
 - Make it update itself properly and allow for navigating the file system
-- Have proper error handling, with error messages being reported to OutputMessage

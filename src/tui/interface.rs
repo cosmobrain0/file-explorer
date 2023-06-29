@@ -8,7 +8,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 
-use super::process::Window;
+use super::window::Window;
 
 struct WindowData<'a, Message: Clone, State> {
     window: Box<dyn Window<Message, State> + 'a>,
@@ -55,6 +55,9 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
     }
 
     pub fn update(&mut self) {
+        if self.dead() {
+            return;
+        }
         for message in self.messages.iter() {
             let (message, id) = message;
             match self
@@ -121,6 +124,9 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
     }
 
     pub fn draw(&mut self) {
+        if self.dead() {
+            return;
+        }
         let upper_left = "\u{250C}".to_string();
         let upper_right = "\u{2510}".to_string();
         let lower_left = "\u{2514}".to_string();
@@ -151,7 +157,7 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
             let data = window.window.draw(selected, &self.state);
             let (x, y) = window.window.position(&self.state);
             let (width, height) = (
-                data.iter().map(|x| x.len()).max().unwrap_or(0) + 2,
+                data.iter().map(|x| x.content().len()).max().unwrap_or(0) + 2,
                 data.len() + 2,
             );
 

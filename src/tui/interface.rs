@@ -157,7 +157,11 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
             let data = window.window.draw(selected, &self.state);
             let (x, y) = window.window.position(&self.state);
             let (width, height) = (
-                data.iter().map(|x| x.content().len()).max().unwrap_or(0) + 2,
+                data.iter()
+                    .map(|x| x.content().chars().count())
+                    .max()
+                    .unwrap_or(0)
+                    + 2,
                 data.len() + 2,
             );
 

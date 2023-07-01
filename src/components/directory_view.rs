@@ -157,18 +157,14 @@ impl Window<Message, State> for DirectoryView {
     ) {
         if self.previous_update.elapsed().as_millis() >= UPDATE_TIME {
             self.set_root(self.root.clone()); // TODO: fix this: this is silly
-            self.messages.push((
-                Message::FileList(
-                    self.files
-                        .iter()
-                        .map(|x| x.to_str().unwrap().to_string())
-                        .collect(),
-                ),
-                self.file_view_id,
-            ));
+            self.messages
+                .push((Message::FileList(self.files.to_vec()), self.file_view_id));
         }
-        let messages = self.messages.clone();
+        let mut messages = self.messages.clone();
         self.messages.clear();
+        if self.redraw {
+            messages.push((Message::FileList(self.files.to_vec()), self.file_view_id));
+        }
         (vec![], messages)
     }
 
@@ -200,7 +196,10 @@ impl Window<Message, State> for DirectoryView {
                     }
                 }
                 KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') | KeyCode::Char('L') => {
-                    self.set_root(self.folders[self.selected_directory.unwrap()].clone());
+                    match self.selected_directory {
+                        None => (),
+                        Some(x) => self.set_root(self.folders[x].clone()),
+                    }
                 }
                 KeyCode::Char('h') | KeyCode::Char('H') | KeyCode::Left => {
                     match self.root.as_path().parent() {

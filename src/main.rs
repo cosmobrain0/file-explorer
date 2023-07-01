@@ -1,12 +1,13 @@
 use std::{
     env,
+    path::PathBuf,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
     },
 };
 
-use components::{DirectoryView, InputView, OutputView};
+use components::{DirFilesView, DirectoryView, InputView, OutputView};
 use tui::InterfaceBuilder;
 
 mod components;
@@ -17,7 +18,7 @@ struct State {}
 #[derive(Debug, Clone)]
 enum Message {
     Output(String),
-    FileList(Vec<String>),
+    FileList(Vec<PathBuf>),
 }
 
 fn main() {
@@ -37,6 +38,7 @@ fn main() {
             1,
             2,
         ))
+        .add(DirFilesView::new(1, 30, 0))
         .add(OutputView::new(2, 0, 20));
     let mut interface = interface.build().expect("Failed to build interface :(");
 

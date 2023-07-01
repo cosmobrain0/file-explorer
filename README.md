@@ -43,5 +43,8 @@ you can DM me on Discord: `cosmobrain`
 
 ## TODO > Prototype 1
 this section is more of a note-to-self kinda thing
-- Make a DirectoryView `Window`
 - Make it update itself properly and allow for navigating the file system
+- show files in a `DirFilesView` window
+- Refactor `DirectoryView` thing to use `State` to some extent
+- give `DirectoryView` and `DirFilesView` a max size and scrolling capabilities
+- fix `DirFilesView` so it doesn't redraw every frame

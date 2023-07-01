@@ -45,6 +45,7 @@ impl Window<Message, State> for OutputView {
                 self.messages.push(x.clone());
                 self.redraw = true;
             }
+            _ => (),
         }
     }
 

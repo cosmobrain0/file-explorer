@@ -1,9 +1,12 @@
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
+use std::{
+    env,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
-use components::{InputView, OutputView};
+use components::{DirectoryView, InputView, OutputView};
 use tui::InterfaceBuilder;
 
 mod components;
@@ -14,6 +17,7 @@ struct State {}
 #[derive(Debug, Clone)]
 enum Message {
     Output(String),
+    FileList(Vec<String>),
 }
 
 fn main() {
@@ -25,8 +29,15 @@ fn main() {
 
     let mut interface = InterfaceBuilder::new(State {});
     interface
-        .add(OutputView::new(0, 0, 0))
-        .add(InputView::new(1, 0, 30));
+        .add(DirectoryView::new(
+            0,
+            0,
+            0,
+            env::current_dir().unwrap(),
+            1,
+            2,
+        ))
+        .add(OutputView::new(2, 0, 20));
     let mut interface = interface.build().expect("Failed to build interface :(");
 
     while !interface.dead() && !dead.load(Ordering::Relaxed) {

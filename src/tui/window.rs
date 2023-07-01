@@ -26,6 +26,6 @@ where
     fn id(&self) -> usize;
     fn title(&self, state: &State) -> String;
     fn position(&self, state: &State) -> (usize, usize);
-    fn key_input(&mut self, _key: KeyEvent, _statee: &mut State) {}
-    fn redrawn(&mut self, _selected: bool, _statee: &mut State) {}
+    fn key_input(&mut self, _key: KeyEvent, _state: &mut State) {}
+    fn redrawn(&mut self, _selected: bool, _state: &mut State) {}
 }

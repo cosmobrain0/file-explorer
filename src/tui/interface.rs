@@ -4,7 +4,7 @@ use crossterm::{
     cursor::{DisableBlinking, Hide, MoveTo},
     event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     execute, queue,
-    style::{Color, PrintStyledContent, Stylize},
+    style::{Color, PrintStyledContent, StyledContent, Stylize},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 
@@ -127,14 +127,6 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
         if self.dead() {
             return;
         }
-        let upper_left = "\u{250C}".to_string();
-        let upper_right = "\u{2510}".to_string();
-        let lower_left = "\u{2514}".to_string();
-        let lower_right = "\u{2518}".to_string();
-        let horizontal = "\u{2500}".to_string();
-        let vertical = "\u{2502}".to_string();
-        let _title_left = "\u{2524}".to_string();
-        let _title_right = "\u{251C}".to_string();
         let mut stdout = std::io::stdout();
         if !(self.requires_redraw
             || self
@@ -172,54 +164,72 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
             } else {
                 (0.3, 0.3, 0.3)
             };
-            draw_text(
+
+            draw_bordered_rect(
                 &mut stdout,
                 x,
                 y,
-                &format!(
-                    "{upper_left}{row}{upper_right}",
-                    row = horizontal.repeat(width - 2)
-                ),
                 width,
+                height,
                 border_colour.into(),
-                (0.0, 0.0, 0.0).into(),
+                Colour {
+                    r: 0.0,
+                    g: 0.0,
+                    b: 0.0,
+                },
             );
             for (i, line) in data.iter().enumerate() {
-                draw_text(
-                    &mut stdout,
-                    x,
-                    y + i + 1,
-                    &format!(
-                        "{vertical}{padding}{vertical}",
-                        padding = " ".repeat(width - 2)
-                    ),
-                    width,
-                    border_colour.into(),
-                    (0.0, 0.0, 0.0).into(),
-                );
-                draw_text(
-                    &mut stdout,
-                    x + 1,
-                    y + i + 1,
-                    &format!("{line:width$}", width = width - 2),
-                    width - 2,
-                    (0.75, 0.75, 0.75).into(),
-                    (0.0, 0.0, 0.0).into(),
-                )
+                draw_styled_text(&mut stdout, x + 1, y + i + 1, line, width - 2);
             }
-            draw_text(
-                &mut stdout,
-                x,
-                y + 1 + data.len(),
-                // &format!("╭{row}╮", row = "━".repeat(width - 2)),
-                &format!(
-                    "{lower_left}{row}{lower_right}",
-                    row = "\u{2500}".repeat(width - 2)
-                ),
-                width,
-                border_colour.into(),
-                (0.0, 0.0, 0.0).into(),
-            );
+
+            // draw_text(
+            //     &mut stdout,
+            //     x,
+            //     y,
+            //     format!(
+            //         "{upper_left}{row}{upper_right}",
+            //         row = horizontal.repeat(width - 2)
+            //     ),
+            //     width,
+            //     border_colour.into(),
+            //     (0.0, 0.0, 0.0).into(),
+            // );
+            // for (i, line) in data.iter().enumerate() {
+            //     draw_text(
+            //         &mut stdout,
+            //         x,
+            //         y + i + 1,
+            //         &format!(
+            //             "{vertical}{padding}{vertical}",
+            //             padding = " ".repeat(width - 2)
+            //         ),
+            //         width,
+            //         border_colour.into(),
+            //         (0.0, 0.0, 0.0).into(),
+            //     );
+            //     draw_text(
+            //         &mut stdout,
+            //         x + 1,
+            //         y + i + 1,
+            //         &format!("{line:width$}", width = width - 2),
+            //         width - 2,
+            //         (0.75, 0.75, 0.75).into(),
+            //         (0.0, 0.0, 0.0).into(),
+            //     )
+            // }
+            // draw_text(
+            //     &mut stdout,
+            //     x,
+            //     y + 1 + data.len(),
+            //     // &format!("╭{row}╮", row = "━".repeat(width - 2)),
+            //     &format!(
+            //         "{lower_left}{row}{lower_right}",
+            //         row = "\u{2500}".repeat(width - 2)
+            //     ),
+            //     width,
+            //     border_colour.into(),
+            //     (0.0, 0.0, 0.0).into(),
+            // );
             window.window.redrawn(selected, &mut self.state);
 
             if previous_width > width {
@@ -260,23 +270,16 @@ impl<'a, Message: std::clone::Clone, State> Drop for Interface<'a, Message, Stat
     }
 }
 
-fn draw_text(
+fn draw_styled_text(
     stdout: &mut Stdout,
     x: usize,
     y: usize,
-    text: &str,
+    text: &StyledContent<String>,
     width: usize,
-    colour: Colour,
-    background: Colour,
 ) {
-    let styled = format!("{:width$}", text);
-    let styled = styled
-        .chars()
-        .take(width)
-        .map(|x| x.to_string())
-        .collect::<Vec<_>>()
-        .join("");
-    let styled = styled.on(background.into()).with(colour.into());
+    let mut content = format!("{:width$}", text.content());
+    content = content.chars().take(width).collect();
+    let styled = StyledContent::new(text.style().clone(), content);
     queue!(
         stdout,
         MoveTo(x as u16, y as u16),
@@ -285,9 +288,71 @@ fn draw_text(
     .unwrap();
 }
 
+/// # Panics
+/// Panics if `height < 0` or `width < 2`
+fn draw_bordered_rect(
+    stdout: &mut Stdout,
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    colour: Colour,
+    background: Colour,
+) {
+    let upper_left = "\u{250C}".to_string();
+    let upper_right = "\u{2510}".to_string();
+    let lower_left = "\u{2514}".to_string();
+    let lower_right = "\u{2518}".to_string();
+    let horizontal = "\u{2500}".to_string();
+    let vertical = "\u{2502}".to_string();
+    let _title_left = "\u{2524}".to_string();
+    let _title_right = "\u{251C}".to_string();
+    draw_styled_text(
+        stdout,
+        x,
+        y,
+        &format!(
+            "{upper_left}{row}{upper_right}",
+            row = horizontal.repeat(width - 2)
+        )
+        .on(background.into())
+        .with(colour.into()),
+        width,
+    );
+
+    let middle = format!(
+        "{vertical}{padding}{vertical}",
+        padding = " ".repeat(width - 2)
+    )
+    .on(background.into())
+    .with(colour.into());
+    for y in y + 1..y + (height - 1) {
+        draw_styled_text(stdout, x, y, &middle, width);
+    }
+
+    draw_styled_text(
+        stdout,
+        x,
+        y + height - 1,
+        &format!(
+            "{lower_left}{row}{lower_right}",
+            row = horizontal.repeat(width - 2)
+        )
+        .on(background.into())
+        .with(colour.into()),
+        width,
+    );
+}
+
 fn draw_rect(stdout: &mut Stdout, x: usize, y: usize, width: usize, height: usize, colour: Colour) {
     for y in y..y + height {
-        draw_text(stdout, x, y, "", width, colour, colour);
+        draw_styled_text(
+            stdout,
+            x,
+            y,
+            &"".to_string().on(colour.into()).with(colour.into()),
+            width,
+        );
     }
 }
 

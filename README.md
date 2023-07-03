@@ -43,9 +43,10 @@ you can DM me on Discord: `cosmobrain`
 
 ## TODO > Prototype 1 > Refactor Window
 this section is more of a note-to-self kinda thing
-- [ ] Make `draw` and `update` return structs `DrawData` and `UpdateData` instead of complex types
-- [ ] `DrawData` should include information about scrolling, which `Interface` is responsible
+- [x] Make `draw` and `update` return structs `DrawData` and `UpdateData` instead of complex types
+- [x] `DrawData` should include information about scrolling, which `Interface` is responsible
   for interpreting
-- [ ] `impl From<Vec<String>> for DrawData`
-- [ ] `impl From<Vec<StyledContent>> for DrawData`
+- [x] `impl From<Vec<String>> for DrawData`
+- [x] `impl From<Vec<StyledContent>> for DrawData`
 - [ ] Allow draw data to store data with different styles on the same line
+- [ ] figure out redrawing: borders must be redrawn when selection changes

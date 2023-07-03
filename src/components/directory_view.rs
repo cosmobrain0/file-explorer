@@ -10,7 +10,10 @@ use crossterm::{
 };
 
 use crate::{
-    tui::{interface::Colour, window::Window},
+    tui::{
+        interface::Colour,
+        window::{DrawData, UpdateData, Window},
+    },
     Message, State,
 };
 
@@ -103,11 +106,7 @@ impl Window<Message, State> for DirectoryView {
     fn requires_redraw(&self, _state: &State) -> bool {
         self.redraw
     }
-    fn draw(
-        &self,
-        _selected: bool,
-        _statee: &State,
-    ) -> Vec<crossterm::style::StyledContent<String>> {
+    fn draw(&self, _selected: bool, _statee: &State) -> DrawData {
         let mut lines = Vec::with_capacity(self.folders.len() + 1);
         lines.push(StyledContent::new(ContentStyle::default(), self.name()));
 
@@ -129,7 +128,16 @@ impl Window<Message, State> for DirectoryView {
                 style_normal(data)
             });
         }
-        lines
+        let (width, height) = crossterm::terminal::size().unwrap();
+        let (width, height): (usize, usize) = (width.into(), height.into());
+        DrawData::new(
+            lines,
+            self.selected_directory
+                .unwrap_or(0)
+                .saturating_sub(height / 2 - 2 - 2),
+            height / 2 - 2,
+            width / 2 - 2,
+        )
     }
     fn redrawn(&mut self, _selected: bool, _state: &mut State) {
         self.redraw = false;
@@ -151,10 +159,7 @@ impl Window<Message, State> for DirectoryView {
         &mut self,
         _selected: bool,
         _state: &mut State,
-    ) -> (
-        Vec<Box<dyn Window<Message, State> + 'a>>,
-        Vec<(Message, usize)>,
-    ) {
+    ) -> UpdateData<'a, Message, State> {
         if self.previous_update.elapsed().as_millis() >= UPDATE_TIME {
             self.set_root(self.root.clone()); // TODO: fix this: this is silly
             self.messages
@@ -165,7 +170,7 @@ impl Window<Message, State> for DirectoryView {
         if self.redraw {
             messages.push((Message::FileList(self.files.to_vec()), self.file_view_id));
         }
-        (vec![], messages)
+        UpdateData::new(vec![], messages)
     }
 
     fn key_input(&mut self, key: KeyEvent, _state: &mut State) {

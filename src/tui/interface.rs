@@ -97,7 +97,10 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
 
         let mut new_windows = vec![];
         self.windows.iter_mut().enumerate().for_each(|(i, x)| {
-            let (windows, messages) = x.window.update(i == self.selected, &mut self.state);
+            let (windows, messages) = {
+                let updated = x.window.update(i == self.selected, &mut self.state);
+                (updated.new_windows, updated.new_messages)
+            };
             new_windows.extend(windows);
             self.messages.extend(messages);
         });
@@ -147,6 +150,27 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
                 continue;
             }
             let data = window.window.draw(selected, &self.state);
+            let ideal_height = data.height;
+            let ideal_width = data.width;
+            let mut data: Vec<_> = data
+                .data
+                .into_iter()
+                .skip(data.scroll)
+                .take(ideal_height)
+                .map(|x| {
+                    StyledContent::new(x.style().clone(), {
+                        let mut result: String = x.content().chars().take(ideal_width).collect();
+                        result += &" ".repeat(ideal_width - result.len());
+                        result
+                    })
+                })
+                .collect();
+            for i in data.len()..ideal_height {
+                data.push(StyledContent::new(
+                    crossterm::style::ContentStyle::default(),
+                    " ".repeat(ideal_width),
+                ));
+            }
             let (x, y) = window.window.position(&self.state);
             let (width, height) = (
                 data.iter()

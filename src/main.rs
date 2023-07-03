@@ -38,8 +38,8 @@ fn main() {
             1,
             2,
         ))
-        .add(DirFilesView::new(1, 30, 0))
-        .add(OutputView::new(2, 0, 20));
+        .add(DirFilesView::new(1, 0, 0)) // position is unused
+        .add(OutputView::new(2, 30, 20));
     let mut interface = interface.build().expect("Failed to build interface :(");
 
     while !interface.dead() && !dead.load(Ordering::Relaxed) {

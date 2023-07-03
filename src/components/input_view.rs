@@ -3,7 +3,10 @@ use crossterm::{
     style::{ContentStyle, StyledContent},
 };
 
-use crate::{tui::window::Window, Message, State};
+use crate::{
+    tui::window::{DrawData, UpdateData, Window},
+    Message, State,
+};
 
 pub struct InputView {
     to_send: Vec<String>,
@@ -22,11 +25,12 @@ impl InputView {
     }
 }
 impl Window<Message, State> for InputView {
-    fn draw(&self, _selected: bool, _state: &State) -> Vec<StyledContent<String>> {
+    fn draw(&self, _selected: bool, _state: &State) -> DrawData {
         vec![StyledContent::new(
             ContentStyle::default(),
             self.text.clone(),
         )]
+        .into()
     }
 
     fn id(&self) -> usize {
@@ -88,14 +92,11 @@ impl Window<Message, State> for InputView {
         &mut self,
         _selected: bool,
         _state: &mut State,
-    ) -> (
-        Vec<Box<dyn Window<Message, State> + 'a>>,
-        Vec<(Message, usize)>,
-    ) {
+    ) -> UpdateData<'a, Message, State> {
         let mut messages = Vec::with_capacity(self.to_send.len());
         while let Some(line) = self.to_send.pop() {
             messages.push(Message::Output(line));
         }
-        (vec![], messages.into_iter().rev().map(|x| (x, 0)).collect())
+        UpdateData::new(vec![], messages.into_iter().rev().map(|x| (x, 0)).collect())
     }
 }

@@ -49,4 +49,4 @@ this section is more of a note-to-self kinda thing
 - [x] `impl From<Vec<String>> for DrawData`
 - [x] `impl From<Vec<StyledContent>> for DrawData`
 - [ ] Allow draw data to store data with different styles on the same line
-- [ ] figure out redrawing: borders must be redrawn when selection changes
+- [x] figure out redrawing: borders must be redrawn when selection changes

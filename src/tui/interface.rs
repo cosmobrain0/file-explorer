@@ -4,7 +4,7 @@ use crossterm::{
     cursor::{DisableBlinking, Hide, MoveTo},
     event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     execute, queue,
-    style::{Color, PrintStyledContent, StyledContent, Stylize},
+    style::{Color, Print, PrintStyledContent, StyledContent, Stylize},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 
@@ -146,9 +146,6 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
             .enumerate()
             .map(|(i, window)| (i, i == self.selected, window))
         {
-            if !self.requires_redraw && !window.window.requires_redraw(&self.state) {
-                continue;
-            }
             let data = window.window.draw(selected, &self.state);
             let ideal_height = data.height;
             let ideal_width = data.width;
@@ -202,6 +199,11 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
                     b: 0.0,
                 },
             );
+
+            if !self.requires_redraw && !window.window.requires_redraw(&self.state) {
+                continue;
+            }
+
             for (i, line) in data.iter().enumerate() {
                 draw_styled_text(&mut stdout, x + 1, y + i + 1, line, width - 2);
             }
@@ -351,7 +353,15 @@ fn draw_bordered_rect(
     .on(background.into())
     .with(colour.into());
     for y in y + 1..y + (height - 1) {
-        draw_styled_text(stdout, x, y, &middle, width);
+        queue!(
+            stdout,
+            MoveTo(x as u16, y as u16),
+            PrintStyledContent(vertical.clone().with(colour.into()).on(background.into())),
+            MoveTo((x + width - 1) as u16, y as u16),
+            PrintStyledContent(vertical.clone().with(colour.into()).on(background.into())),
+        )
+        .unwrap();
+        // draw_styled_text(stdout, x, y, &middle, width);
     }
 
     draw_styled_text(

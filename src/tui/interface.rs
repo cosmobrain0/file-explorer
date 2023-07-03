@@ -4,7 +4,7 @@ use crossterm::{
     cursor::{DisableBlinking, Hide, MoveTo},
     event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     execute, queue,
-    style::{Color, PrintStyledContent, StyledContent, Stylize},
+    style::{Color, Print, PrintStyledContent, StyledContent, Stylize},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 
@@ -97,7 +97,10 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
 
         let mut new_windows = vec![];
         self.windows.iter_mut().enumerate().for_each(|(i, x)| {
-            let (windows, messages) = x.window.update(i == self.selected, &mut self.state);
+            let (windows, messages) = {
+                let updated = x.window.update(i == self.selected, &mut self.state);
+                (updated.new_windows, updated.new_messages)
+            };
             new_windows.extend(windows);
             self.messages.extend(messages);
         });
@@ -143,10 +146,28 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
             .enumerate()
             .map(|(i, window)| (i, i == self.selected, window))
         {
-            if !self.requires_redraw && !window.window.requires_redraw(&self.state) {
-                continue;
-            }
             let data = window.window.draw(selected, &self.state);
+            let ideal_height = data.height;
+            let ideal_width = data.width;
+            let mut data: Vec<_> = data
+                .data
+                .into_iter()
+                .skip(data.scroll)
+                .take(ideal_height)
+                .map(|x| {
+                    StyledContent::new(x.style().clone(), {
+                        let mut result: String = x.content().chars().take(ideal_width).collect();
+                        result += &" ".repeat(ideal_width - result.len());
+                        result
+                    })
+                })
+                .collect();
+            for i in data.len()..ideal_height {
+                data.push(StyledContent::new(
+                    crossterm::style::ContentStyle::default(),
+                    " ".repeat(ideal_width),
+                ));
+            }
             let (x, y) = window.window.position(&self.state);
             let (width, height) = (
                 data.iter()
@@ -178,6 +199,11 @@ impl<'a, Message: Clone, State> Interface<'a, Message, State> {
                     b: 0.0,
                 },
             );
+
+            if !self.requires_redraw && !window.window.requires_redraw(&self.state) {
+                continue;
+            }
+
             for (i, line) in data.iter().enumerate() {
                 draw_styled_text(&mut stdout, x + 1, y + i + 1, line, width - 2);
             }
@@ -327,7 +353,15 @@ fn draw_bordered_rect(
     .on(background.into())
     .with(colour.into());
     for y in y + 1..y + (height - 1) {
-        draw_styled_text(stdout, x, y, &middle, width);
+        queue!(
+            stdout,
+            MoveTo(x as u16, y as u16),
+            PrintStyledContent(vertical.clone().with(colour.into()).on(background.into())),
+            MoveTo((x + width - 1) as u16, y as u16),
+            PrintStyledContent(vertical.clone().with(colour.into()).on(background.into())),
+        )
+        .unwrap();
+        // draw_styled_text(stdout, x, y, &middle, width);
     }
 
     draw_styled_text(

@@ -1,6 +1,9 @@
 use crossterm::style::{ContentStyle, StyledContent};
 
-use crate::{tui::window::Window, Message, State};
+use crate::{
+    tui::window::{DrawData, Window},
+    Message, State,
+};
 
 pub struct OutputView {
     messages: Vec<String>,
@@ -29,14 +32,13 @@ impl Window<Message, State> for OutputView {
         self.redraw
     }
 
-    fn draw(&self, _selected: bool, _state: &State) -> Vec<StyledContent<String>> {
-        self.messages
-            .iter()
-            .rev()
-            .take(self.height)
-            .cloned()
-            .map(|x| StyledContent::new(ContentStyle::default(), x))
-            .collect()
+    fn draw(&self, _selected: bool, _state: &State) -> DrawData {
+        DrawData::with_strings(
+            self.messages.clone(),
+            self.messages.len().saturating_sub(self.height),
+            self.height,
+            crossterm::terminal::size().unwrap().1 as usize / 2 - 2,
+        )
     }
 
     fn receive_message(&mut self, message: &Message, _selected: bool, _state: &mut State) {

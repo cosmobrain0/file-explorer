@@ -1,4 +1,4 @@
-# File Explorer > Prototype 1 > Refactor Window
+# File Explorer > Prototype 1
 > A file explorer written in Rust for the command line
 
 This project uses `crossterm`, so it should run on everything (I think), but I only intend
@@ -41,13 +41,10 @@ then you can make a request and if your code is clear enough that I can understa
 it's been tested then I'll merge it. If you would like to discuss this project then
 you can DM me on Discord: `cosmobrain`
 
-## TODO > Prototype 1 > Refactor Window
+## TODO > Prototype 1
 this section is more of a note-to-self kinda thing
-- [x] Make `draw` and `update` return structs `DrawData` and `UpdateData` instead of complex types
-- [x] `DrawData` should include information about scrolling, which `Interface` is responsible
-  for interpreting
-- [x] `impl From<Vec<String>> for DrawData`
-- [x] `impl From<Vec<StyledContent>> for DrawData`
-- [-] Allow draw data to store data with different styles on the same line
-  > decided to scrap this idea because it's too much effort and I don't see enough benefit right now
-- [x] figure out redrawing: borders must be redrawn when selection changes
+- [x] Make it update itself properly and allow for navigating the file system
+- [x] show files in a `DirFilesView` window
+- [ ] Refactor `DirectoryView` thing to use `State` to some extent
+- [x] give `DirectoryView` and `DirFilesView` a max size and scrolling capabilities
+- [x] fix `DirFilesView` so it doesn't redraw every frame
